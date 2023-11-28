@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <Button
+        android:layout_width="0px"
+        android:layout_height="wrap_content"
+        android:id="@+id/minusX"
+        android:text="@string/minusX"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@id/plusX" />
+    <Button
+        android:layout_width="0px"
+        android:layout_height="wrap_content"
+        android:id="@+id/plusX"
+        android:text="@string/plusX"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toRightOf="@id/minusX"
+        app:layout_constraintRight_toLeftOf="@id/minusY" />
+    <Button
+        android:layout_width="0px"
+        android:layout_height="wrap_content"
+        android:id="@+id/minusY"
+        android:text="@string/minusY"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toRightOf="@id/plusX"
+        app:layout_constraintRight_toLeftOf="@id/plusY" />
+    <Button
+        android:layout_width="0px"
+        android:layout_height="wrap_content"
+        android:id="@+id/plusY"
+        android:text="@string/plusY"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toRightOf="@id/minusY"
+        app:layout_constraintRight_toLeftOf="@id/minusZ" />
+
+    <Button
+        android:layout_width="0px"
+        android:layout_height="wrap_content"
+        android:id="@+id/minusZ"
+        android:text="@string/minusZ"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toRightOf="@id/plusY"
+        app:layout_constraintRight_toLeftOf="@id/plusZ" />
+
+    <Button
+        android:layout_width="0px"
+        android:layout_height="wrap_content"
+        android:id="@+id/plusZ"
+        android:text="@string/plusZ"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toRightOf="@id/minusZ"
+        app:layout_constraintRight_toRightOf="parent"  />
+    <Button
+        android:layout_width="0px"
+        android:layout_height="wrap_content"
+        android:id="@+id/rotateclockwise"
+        android:text="@string/clockwise"
+        app:layout_constraintTop_toBottomOf="@id/minusX"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@id/rotateanticlockwise"
+        app:layout_constraintBottom_toTopOf="@id/glview"  />
+
+    <Button
+        android:id="@+id/rotateanticlockwise"
+        android:layout_width="0px"
+        android:layout_height="wrap_content"
+        android:text="@string/rotateanticlockwise"
+        app:layout_constraintLeft_toRightOf="@id/rotateclockwise"
+        app:layout_constraintRight_toLeftOf="@id/forward"
+        app:layout_constraintTop_toBottomOf="@id/minusY"
+        app:layout_constraintBottom_toTopOf="@id/glview"/>
+
+
+    <Button
+        android:id="@+id/forward"
+        android:layout_width="0px"
+        android:layout_height="wrap_content"
+        android:text="@string/forward"
+        app:layout_constraintLeft_toRightOf="@id/rotateanticlockwise"
+        app:layout_constraintRight_toLeftOf="@id/backward"
+        app:layout_constraintTop_toBottomOf="@id/minusY"
+        app:layout_constraintBottom_toTopOf="@id/glview"/>
+
+    <Button
+        android:id="@+id/backward"
+        android:layout_width="0px"
+        android:layout_height="wrap_content"
+        android:text="@string/backward"
+        app:layout_constraintLeft_toRightOf="@id/forward"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/minusY"
+        app:layout_constraintBottom_toTopOf="@id/glview"/>
+
+    <com.example.week7opengl1.OpenGLView
+        android:id="@+id/glview"
+        android:layout_width="0px"
+        android:layout_height="0px"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/rotateclockwise"
+        app:layout_constraintVertical_bias="1.0" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
