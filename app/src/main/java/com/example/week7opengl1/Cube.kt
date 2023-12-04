@@ -60,8 +60,7 @@ class Cube(val x: Float, val y: Float, val z: Float) {
         val stride = 24 // because one record contains vertices (12 bytes) and colours (12 bytes)
         val attrVarRef= gpu.getAttribLocation("aVertex")
         val colourVarRef = gpu.getAttribLocation("aColour")
-        Log.d("OpenGLBasic", "Shader error: ${attrVarRef}")
-        Log.d("OpenGLBasic", "Shader error: ${colourVarRef}")
+
         gpu.specifyBufferedDataFormat(attrVarRef, vertexandColurBuf, stride, 0)
         gpu.specifyBufferedDataFormat(colourVarRef, vertexandColurBuf, stride, 3)
         gpu.drawElements(indexBuf)

@@ -1,6 +1,7 @@
 package com.example.week7opengl1
 
 import android.content.Context
+import android.graphics.SurfaceTexture
 
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
@@ -16,7 +17,7 @@ import java.nio.ShortBuffer
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
-class OpenGLView(ctx: Context, aSet: AttributeSet): GLSurfaceView(ctx, aSet), GLSurfaceView.Renderer  {
+class OpenGLView(ctx: Context, val Callback: (SurfaceTexture) -> Unit) : GLSurfaceView(ctx), GLSurfaceView.Renderer  {
     init {
         setEGLContextClientVersion(2) // specify OpenGL ES 2.0
         setRenderer(this) // set the renderer for this GLSurfaceView
@@ -24,11 +25,15 @@ class OpenGLView(ctx: Context, aSet: AttributeSet): GLSurfaceView(ctx, aSet), GL
     // gpu objects
     val gpu = GPUInterface("default shader")
     val gpu2 = GPUInterface("colour shader")
+    // texture gpu
+    val gpuTexture = GPUInterface("texture")
     // vertex buffers
     var fbuf : FloatBuffer? = null
     var fbuf2 : FloatBuffer? = null
+    var fbuf3 : FloatBuffer? = null
     // index buffer
     var indicesfbuf : ShortBuffer? = null
+    var indicesfbuf2 : ShortBuffer? = null
     // cubes class(buffer)
     var cube: Cube = Cube(3f, 0f, 0f)
     var cube2: Cube = Cube(-3f, 0f, 0f)
@@ -44,6 +49,8 @@ class OpenGLView(ctx: Context, aSet: AttributeSet): GLSurfaceView(ctx, aSet), GL
     val viewMatrix = GLMatrix()
     // Create a variable to hold projection matrix
     val projectionMatrix = GLMatrix()
+    // texture
+    var cameraFeedSurfaceTexture : SurfaceTexture? = null
 
 
 
@@ -54,7 +61,19 @@ class OpenGLView(ctx: Context, aSet: AttributeSet): GLSurfaceView(ctx, aSet), GL
         // Enable depth testing - will cause nearer 3D objects to automatically
         // be drawn over further objects
         GLES20.glClearDepthf(1.0f)
-        GLES20.glEnable(GLES20.GL_DEPTH_TEST)
+
+        // creating a texture
+        val textureId = OpenGLUtils.genTexture()
+        Log.d("OpenGLBasic", "Texture id = $textureId")
+        if(textureId != 0){
+            OpenGLUtils.bindTextureToTextureUnit(textureId, GLES20.GL_TEXTURE0, OpenGLUtils.GL_TEXTURE_EXTERNAL_OES)
+            cameraFeedSurfaceTexture = SurfaceTexture(textureId)
+            Callback(cameraFeedSurfaceTexture!!)
+        }
+
+
+
+
         try {
             val success = gpu.loadShaders(context.assets, "vertex.glsl", "fragment.glsl")
             if (!success) {
@@ -64,6 +83,15 @@ class OpenGLView(ctx: Context, aSet: AttributeSet): GLSurfaceView(ctx, aSet), GL
             if (!success2) {
                 Log.d("OpenGLBasic", "Shader error: ${gpu2.lastShaderError}")
             }
+            val success3 = gpuTexture.loadShaders(context.assets, "vertexTexture.glsl", "fragmentTexture.glsl")
+            if (!success3) {
+                Log.d("OpenGLBasic", "Shader error: ${gpu.lastShaderError}")
+            }
+            gpuTexture.select()
+            val refTextureUnit = gpuTexture.getUniformLocation("uTexture")
+            gpuTexture.setUniformInt(refTextureUnit, 0)
+
+
             fbuf = OpenGLUtils.makeFloatBuffer(
                 floatArrayOf(
                     0f, 0f, -3f,
@@ -82,7 +110,16 @@ class OpenGLView(ctx: Context, aSet: AttributeSet): GLSurfaceView(ctx, aSet), GL
                     0f, 1f, -2f,
                     )
             )
+            fbuf3 = OpenGLUtils.makeFloatBuffer(
+                floatArrayOf(
+                    -1f, 1f, 0f,
+                    -1f, -1f, 0f,
+                     1f, -1f, 0f,
+                     1f, 1f, 0f,
+                )
+            )
             indicesfbuf = OpenGLUtils.makeShortBuffer( shortArrayOf(0,1,2,2,3,0))
+            indicesfbuf2 = OpenGLUtils.makeShortBuffer( shortArrayOf(0,1,2,2,3,0))
 
 
         } catch (e: IOException) {
@@ -94,12 +131,24 @@ class OpenGLView(ctx: Context, aSet: AttributeSet): GLSurfaceView(ctx, aSet), GL
     override fun onDrawFrame(gl: GL10?) {
         // clear any previous setting from previous frame
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
+        GLES20.glDisable(GLES20.GL_DEPTH_TEST)
         // Only run if buffer is not null
-        if(fbuf != null && fbuf2 != null && indicesfbuf != null) {
+        if(fbuf != null && fbuf2 != null && fbuf3 != null && indicesfbuf != null && indicesfbuf2 != null) {
+            // Update the surface texture with the latest frame from the camera
+            cameraFeedSurfaceTexture?.updateTexImage()
+            // camerabackground
+
+            gpuTexture.select()
+            val ref_aVertex2 = gpuTexture.getAttribLocation("aVertex")
+            // rectangle
+            gpuTexture.drawIndexedBufferedData(fbuf3!!, indicesfbuf2!!, 0, ref_aVertex2)
+            GLES20.glEnable(GLES20.GL_DEPTH_TEST)
+
             viewMatrix.setAsIdentityMatrix()
             viewMatrix.rotateAboutAxis(-camera.rotation , 'y')
             viewMatrix.translate(-camera.position.x, -camera.position.y, -camera.position.z)
-
+            // Selects this shader
+            gpu.select()
             val refUView = gpu.getUniformLocation("uView")
             val refUProj = gpu.getUniformLocation("uProj")
 
@@ -109,8 +158,7 @@ class OpenGLView(ctx: Context, aSet: AttributeSet): GLSurfaceView(ctx, aSet), GL
             val ref_aVertex = gpu.getAttribLocation("aVertex")
             val ref_uColour = gpu.getUniformLocation("uColour")
 
-            // Selects this shader
-            gpu.select()
+
 
             gpu.specifyBufferedDataFormat(ref_aVertex, fbuf!!, 0)
             //first triangle
@@ -127,14 +175,14 @@ class OpenGLView(ctx: Context, aSet: AttributeSet): GLSurfaceView(ctx, aSet), GL
 
             gpu2.select()
 
-            val refUView2 = gpu.getUniformLocation("uPerspMtx")
-            val refUProj2 = gpu.getUniformLocation("uMvMtx")
-            Log.d("OpenGLBasic", "Shader error: ${refUProj2}")
-            Log.d("OpenGLBasic", "Shader error: ${refUView2}")
+            val refUProj2 = gpu2.getUniformLocation("uPerspMtx")
+            val refUView2 = gpu2.getUniformLocation("uMvMtx")
+
             gpu2.sendMatrix(refUView2, viewMatrix)
             gpu2.sendMatrix(refUProj2, projectionMatrix)
-
+            // cube2
             cube2.renderMulti(gpu2)
+
 
         }
     }
