@@ -1,8 +1,13 @@
 package com.example.week7opengl1
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.SurfaceTexture
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -15,13 +20,31 @@ import androidx.camera.core.SurfaceRequest
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import freemap.openglwrapper.GLMatrix
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), SensorEventListener {
     var cameraPermission = false
     var surfaceTexture: SurfaceTexture? = null
-    lateinit var  glview: OpenGLView
+    lateinit var glview: OpenGLView
+    var accel: Sensor? = null
+    var magField: Sensor? = null
+
+    // Arrays to hold the current acceleration and magnetic field sensor values
+    var accelValues = FloatArray(3)
+    var magFieldValues = FloatArray(3)
+    var orientionMatrix = FloatArray(16)
+    var remappedMatrix = FloatArray(16)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val sMgr = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+
+        accel = sMgr.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+        magField = sMgr.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
+
+        sMgr.registerListener(this, accel, SensorManager.SENSOR_DELAY_UI)
+        sMgr.registerListener(this, magField, SensorManager.SENSOR_DELAY_UI)
 
         glview = OpenGLView(this) {
             surfaceTexture = it
@@ -142,6 +165,33 @@ class MainActivity : AppCompatActivity() {
             AlertDialog.Builder(this).setPositiveButton("OK", null)
                 .setMessage("CAMERA permission denied").show()
         }
+    }
+
+    override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) {
+        // Leave blank
+    }
+
+    override fun onSensorChanged(ev: SensorEvent) {
+
+        // Test which sensor has been detected.
+        if (ev.sensor == accel) {
+
+            // Copy the current values into the acceleration array
+            accelValues = ev.values.copyOf()
+
+        } else if (ev.sensor == magField) {
+
+            // TODO ... do the same for the magnetic field values (not shown)
+            magFieldValues = ev.values.copyOf()
+
+        }
+
+
+        // TODO Calculate the matrix.
+        SensorManager.getRotationMatrix(orientionMatrix, null, accelValues, magFieldValues)
+        SensorManager.remapCoordinateSystem(orientionMatrix,SensorManager.AXIS_Y, SensorManager.AXIS_MINUS_X, remappedMatrix)
+        glview.orientationMatrix = GLMatrix(remappedMatrix)
+
     }
 
 

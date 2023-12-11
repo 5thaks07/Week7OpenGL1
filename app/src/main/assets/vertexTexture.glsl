@@ -4,5 +4,5 @@ attribute vec4 aVertex;
                void main (void)
     {
         gl_Position = aVertex;
-        vTextureValue = vec2(0.5*(1.0 + aVertex.x), 0.5*(1.0 + aVertex.y));
+        vTextureValue = vec2(0.5*(1.0 + aVertex.x), 0.5*(1.0 - aVertex.y));
 }

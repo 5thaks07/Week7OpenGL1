@@ -46,9 +46,11 @@ class OpenGLView(ctx: Context, val Callback: (SurfaceTexture) -> Unit) : GLSurfa
     // create a camera object
     val camera = Camera(0f, 0f, 0f)
     // Create a variable to hold view matrix
-    val viewMatrix = GLMatrix()
+    var viewMatrix = GLMatrix()
     // Create a variable to hold projection matrix
     val projectionMatrix = GLMatrix()
+    // orientation matrix
+    var orientationMatrix = GLMatrix()
     // texture
     var cameraFeedSurfaceTexture : SurfaceTexture? = null
 
@@ -145,6 +147,8 @@ class OpenGLView(ctx: Context, val Callback: (SurfaceTexture) -> Unit) : GLSurfa
             GLES20.glEnable(GLES20.GL_DEPTH_TEST)
 
             viewMatrix.setAsIdentityMatrix()
+            viewMatrix = orientationMatrix.clone()
+            viewMatrix.correctSensorMatrix()
             viewMatrix.rotateAboutAxis(-camera.rotation , 'y')
             viewMatrix.translate(-camera.position.x, -camera.position.y, -camera.position.z)
             // Selects this shader
@@ -154,7 +158,6 @@ class OpenGLView(ctx: Context, val Callback: (SurfaceTexture) -> Unit) : GLSurfa
 
             gpu.sendMatrix(refUView, viewMatrix)
             gpu.sendMatrix(refUProj, projectionMatrix)
-
             val ref_aVertex = gpu.getAttribLocation("aVertex")
             val ref_uColour = gpu.getUniformLocation("uColour")
 
